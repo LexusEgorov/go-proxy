@@ -1,2 +1,2 @@
 local:
-	go run ./cmd/proxy
+	go run ./cmd/proxy --config ./configs/local.yml
