@@ -4,21 +4,19 @@ import (
 	"io"
 	"net/http"
 	"time"
+
+	"github.com/LexusEgorov/go-proxy/internal/config"
 )
 
 type Client struct {
-	client      http.Client
-	minInterval int
-	maxInterval int
-	factor      int
+	cfg    config.ClientConfig
+	client http.Client
 }
 
-func New(minInterval, maxInterval, factor int) *Client {
+func New(cfg config.ClientConfig) *Client {
 	return &Client{
-		client:      http.Client{},
-		minInterval: minInterval,
-		maxInterval: maxInterval,
-		factor:      factor,
+		client: http.Client{},
+		cfg:    cfg,
 	}
 }
 
@@ -36,13 +34,13 @@ func (c Client) doRetry(req *http.Request) (*http.Response, error) {
 	var res *http.Response
 	var err error
 
-	delay := c.minInterval
+	delay := c.cfg.Interval.Min
 
 	for {
-		nextDelay := c.minInterval * c.factor
+		nextDelay := c.cfg.Interval.Min * c.cfg.Factor
 		res, err = c.client.Do(req)
 
-		if err == nil || nextDelay > c.maxInterval {
+		if err == nil || nextDelay > c.cfg.Interval.Max {
 			break
 		}
 
