@@ -1,13 +1,12 @@
 package config
 
 //TODO: read env
-//TODO: read yaml
-//TODO: exponential backoff
 
 import (
 	"errors"
 	"flag"
 	"os"
+	"strconv"
 
 	"github.com/ilyakaznacheev/cleanenv"
 
@@ -26,38 +25,141 @@ type Interval struct {
 type ClientConfig struct {
 	Interval Interval `yaml:"interval"`
 	URL      string   `yaml:"url"`
+	Factor   int      `yaml:"factor"`
 }
 
 type Config struct {
-	Env    string       `yaml:"env"`
 	Server ServerConfig `yaml:"server"`
 	Client ClientConfig `yaml:"client"`
 }
 
 func New() (*Config, error) {
+	var (
+		cfg *Config
+		err error
+	)
+
 	configPath, err := fetchConfigPath()
+
+	if err != nil {
+		if !errors.Is(err, models.ErrConfigPathNotProvided) {
+			return nil, err
+		}
+
+		cfg, err = readEnvConfig()
+	} else {
+		cfg, err = readFileConfig(configPath)
+	}
+
+	err = checkConfig(cfg)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if _, err = os.Stat(configPath); os.IsNotExist(err) {
+	return cfg, nil
+}
+
+// Валидирует конфиг
+func checkConfig(cfg *Config) error {
+	if err := checkServerConfig(&cfg.Server); err != nil {
+		return err
+	}
+
+	return checkClientConfig(&cfg.Client)
+}
+
+// Валидирует клиентский конфиг
+func checkClientConfig(cfg *ClientConfig) error {
+	if cfg.Factor <= 1 {
+		return models.ErrBadConfigFactor
+	}
+
+	if cfg.URL == "" {
+		return models.ErrBadConfigURL
+	}
+
+	if cfg.Interval.Min < 0 {
+		return models.ErrBadConfigMinInterval
+	}
+
+	if cfg.Interval.Max < 0 {
+		return models.ErrBadConfigMaxInterval
+	}
+
+	if cfg.Interval.Max < cfg.Interval.Min {
+		return models.ErrBadConfigMinMaxInterval
+	}
+
+	return nil
+}
+
+// Валидирует серверный конфиг
+func checkServerConfig(cfg *ServerConfig) error {
+	if cfg.Port <= 0 {
+		return models.ErrBadConfigPort
+	}
+
+	return nil
+}
+
+// Читает конфиг из ENV
+func readEnvConfig() (*Config, error) {
+	port, err := strconv.Atoi(os.Getenv("SERVER_PORT"))
+
+	if err != nil {
+		return nil, err
+	}
+
+	minInterval, err := strconv.Atoi(os.Getenv("MIN_INTERVAL"))
+
+	if err != nil {
+		return nil, err
+	}
+
+	maxInterval, err := strconv.Atoi(os.Getenv("MAX_INTERVAL"))
+
+	if err != nil {
+		return nil, err
+	}
+
+	factor, err := strconv.Atoi(os.Getenv("FACTOR"))
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &Config{
+		Server: ServerConfig{
+			Port: port,
+		},
+		Client: ClientConfig{
+			Interval: Interval{
+				Min: minInterval,
+				Max: maxInterval,
+			},
+			Factor: factor,
+			URL:    os.Getenv("DESTINATION_URL"),
+		},
+	}, nil
+}
+
+// Читает конфиг из файла
+func readFileConfig(configPath string) (*Config, error) {
+	if _, err := os.Stat(configPath); os.IsNotExist(err) {
 		return nil, err
 	}
 
 	var cfg Config
 
-	if err = cleanenv.ReadConfig(configPath, &cfg); err != nil {
+	if err := cleanenv.ReadConfig(configPath, &cfg); err != nil {
 		return nil, err
-	}
-
-	if cfg.Server.Port <= 0 {
-		return nil, models.ErrBadConfigPort
 	}
 
 	return &cfg, nil
 }
 
+// Получает путь до конфигурационного файла через флаг или env
 func fetchConfigPath() (string, error) {
 	var path string
 
@@ -68,7 +170,7 @@ func fetchConfigPath() (string, error) {
 		path = os.Getenv("CONFIG_PATH")
 
 		if path == "" {
-			return "", errors.New("config path is required")
+			return "", models.ErrConfigPathNotProvided
 		}
 	}
 
