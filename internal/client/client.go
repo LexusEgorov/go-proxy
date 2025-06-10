@@ -50,7 +50,7 @@ func (c Client) doRetry(req *http.Request) (*http.Response, error) {
 	delay := c.cfg.Interval.MinMilliseconds
 
 	for {
-		nextDelay := c.cfg.Interval.MinMilliseconds * c.cfg.Factor
+		nextDelay := delay * c.cfg.Factor
 		res, err = c.client.Do(req)
 
 		if err == nil || nextDelay > c.cfg.Interval.MaxMilliseconds {
