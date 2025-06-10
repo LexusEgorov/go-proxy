@@ -45,7 +45,7 @@ func New() (*Config, error) {
 
 	if err != nil {
 		if !errors.Is(err, models.ErrConfigPathNotProvided) {
-			return nil, err
+			return nil, fmt.Errorf("read config error: %v", err)
 		}
 
 		cfg, err = readEnvConfig()

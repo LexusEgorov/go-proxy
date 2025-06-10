@@ -71,7 +71,7 @@ func newProxyHandler(client Client) echo.HandlerFunc {
 		bytedBody, err := io.ReadAll(response.Body)
 
 		if err != nil {
-			return err
+			return fmt.Errorf("read body err: %v", err)
 		}
 
 		return c.Blob(response.StatusCode, response.Header.Get(echo.HeaderContentType), bytedBody)
