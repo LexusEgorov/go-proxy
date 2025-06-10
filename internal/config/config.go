@@ -5,10 +5,12 @@ package config
 import (
 	"errors"
 	"flag"
+	"fmt"
 	"os"
 	"strconv"
 
 	"github.com/ilyakaznacheev/cleanenv"
+	"github.com/joho/godotenv"
 
 	"github.com/LexusEgorov/go-proxy/internal/models"
 )
@@ -51,6 +53,10 @@ func New() (*Config, error) {
 		cfg, err = readFileConfig(configPath)
 	}
 
+	if err != nil {
+		return nil, err
+	}
+
 	err = checkConfig(cfg)
 
 	if err != nil {
@@ -79,7 +85,7 @@ func checkClientConfig(cfg *ClientConfig) error {
 		return models.ErrBadConfigURL
 	}
 
-	if cfg.Interval.Min < 0 {
+	if cfg.Interval.Min <= 0 {
 		return models.ErrBadConfigMinInterval
 	}
 
@@ -103,13 +109,15 @@ func checkServerConfig(cfg *ServerConfig) error {
 	return nil
 }
 
-// Читает конфиг из ENV
+// Читает конфиг из env
 func readEnvConfig() (*Config, error) {
 	port, err := strconv.Atoi(os.Getenv("SERVER_PORT"))
 
 	if err != nil {
 		return nil, err
 	}
+
+	fmt.Printf("port: %d\n", port)
 
 	minInterval, err := strconv.Atoi(os.Getenv("MIN_INTERVAL"))
 
@@ -167,6 +175,12 @@ func fetchConfigPath() (string, error) {
 	flag.Parse()
 
 	if path == "" {
+		err := godotenv.Load()
+
+		if err != nil {
+			return "", err
+		}
+
 		path = os.Getenv("CONFIG_PATH")
 
 		if path == "" {
