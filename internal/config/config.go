@@ -20,8 +20,8 @@ type ServerConfig struct {
 }
 
 type Interval struct {
-	Min int `yaml:"min"`
-	Max int `yaml:"max"`
+	MinMilliseconds int `yaml:"min"`
+	MaxMilliseconds int `yaml:"max"`
 }
 
 type ClientConfig struct {
@@ -85,15 +85,15 @@ func checkClientConfig(cfg *ClientConfig) error {
 		return models.ErrBadConfigURL
 	}
 
-	if cfg.Interval.Min <= 0 {
+	if cfg.Interval.MinMilliseconds <= 0 {
 		return models.ErrBadConfigMinInterval
 	}
 
-	if cfg.Interval.Max < 0 {
+	if cfg.Interval.MaxMilliseconds < 0 {
 		return models.ErrBadConfigMaxInterval
 	}
 
-	if cfg.Interval.Max < cfg.Interval.Min {
+	if cfg.Interval.MaxMilliseconds < cfg.Interval.MinMilliseconds {
 		return models.ErrBadConfigMinMaxInterval
 	}
 
@@ -143,8 +143,8 @@ func readEnvConfig() (*Config, error) {
 		},
 		Client: ClientConfig{
 			Interval: Interval{
-				Min: minInterval,
-				Max: maxInterval,
+				MinMilliseconds: minInterval,
+				MaxMilliseconds: maxInterval,
 			},
 			Factor: factor,
 			URL:    os.Getenv("DESTINATION_URL"),

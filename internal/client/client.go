@@ -47,13 +47,13 @@ func (c Client) doRetry(req *http.Request) (*http.Response, error) {
 	var res *http.Response
 	var err error
 
-	delay := c.cfg.Interval.Min
+	delay := c.cfg.Interval.MinMilliseconds
 
 	for {
-		nextDelay := c.cfg.Interval.Min * c.cfg.Factor
+		nextDelay := c.cfg.Interval.MinMilliseconds * c.cfg.Factor
 		res, err = c.client.Do(req)
 
-		if err == nil || nextDelay > c.cfg.Interval.Max {
+		if err == nil || nextDelay > c.cfg.Interval.MaxMilliseconds {
 			break
 		}
 
