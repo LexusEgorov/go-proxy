@@ -1,6 +1,7 @@
 package client
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 	"time"
@@ -20,11 +21,23 @@ func New(cfg config.ClientConfig) *Client {
 	}
 }
 
-func (c Client) Request(method, url string, body io.Reader) (*http.Response, error) {
-	req, err := http.NewRequest(method, url, body)
+func (c Client) Request(method, url string, body io.Reader, headers http.Header) (*http.Response, error) {
+	req, err := http.NewRequest(method, fmt.Sprintf("%s%s", c.cfg.URL, url), body)
 
 	if err != nil {
 		return nil, err
+	}
+
+	for key, value := range headers {
+
+		if len(value) == 1 {
+			req.Header.Set(key, value[0])
+			continue
+		}
+
+		for _, header := range value {
+			req.Header.Add(key, header)
+		}
 	}
 
 	return c.doRetry(req)
