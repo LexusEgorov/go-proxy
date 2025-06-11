@@ -39,8 +39,8 @@ func (s Server) Run() {
 	}()
 }
 
-func (s Server) Stop() {
-	s.server.Shutdown(context.Background())
+func (s Server) Stop(ctx context.Context) error {
+	return s.server.Shutdown(ctx)
 }
 
 func newProxyHandler(client Client) echo.HandlerFunc {

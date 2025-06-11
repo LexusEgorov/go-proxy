@@ -1,9 +1,11 @@
 package main
 
 import (
+	"context"
 	"log"
 	"os"
 	"os/signal"
+	"time"
 
 	"github.com/LexusEgorov/go-proxy/internal/client"
 	"github.com/LexusEgorov/go-proxy/internal/config"
@@ -31,5 +33,23 @@ func main() {
 	signal.Notify(stopChan, os.Interrupt)
 
 	<-stopChan
-	proxyServer.Stop()
+	timeout := time.Second * 5
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	doneCh := make(chan error)
+	go func() {
+		doneCh <- proxyServer.Stop(ctx)
+	}()
+
+	select {
+	case err := <-doneCh:
+		if err != nil {
+			log.Printf("Error while stopping server: %v", err)
+		}
+		log.Printf("App has been stopped gracefully")
+
+	case <-ctx.Done():
+		log.Printf("App stopped forced")
+	}
 }
