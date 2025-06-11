@@ -35,12 +35,7 @@ type Config struct {
 	Client ClientConfig `yaml:"client"`
 }
 
-func New() (*Config, error) {
-	var (
-		cfg *Config
-		err error
-	)
-
+func New() (cfg *Config, err error) {
 	configPath, err := fetchConfigPath()
 
 	if err != nil {
