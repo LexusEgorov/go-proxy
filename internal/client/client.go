@@ -43,10 +43,7 @@ func (c Client) Request(method, url string, body io.Reader, headers http.Header)
 	return c.doRetry(req)
 }
 
-func (c Client) doRetry(req *http.Request) (*http.Response, error) {
-	var res *http.Response
-	var err error
-
+func (c Client) doRetry(req *http.Request) (res *http.Response, err error) {
 	delay := c.cfg.Interval.MinMilliseconds
 
 	for {
