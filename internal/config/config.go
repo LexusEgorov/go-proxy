@@ -20,8 +20,8 @@ type ServerConfig struct {
 }
 
 type Interval struct {
-	MinMilliseconds int `yaml:"min"`
-	MaxMilliseconds int `yaml:"max"`
+	MinMilliseconds int `yaml:"minMs"`
+	MaxMilliseconds int `yaml:"maxMs"`
 }
 
 type ClientConfig struct {
