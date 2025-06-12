@@ -6,32 +6,29 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/go-resty/resty/v2"
+
 	"github.com/LexusEgorov/go-proxy/internal/config"
 )
 
 type Client struct {
 	cfg    config.ClientConfig
-	client http.Client
+	client resty.Client
 }
 
 func New(cfg config.ClientConfig) *Client {
 	return &Client{
-		client: http.Client{},
+		client: *resty.New(),
 		cfg:    cfg,
 	}
 }
 
-func (c Client) Request(method, url string, body io.Reader, headers http.Header) (*http.Response, error) {
-	req, err := http.NewRequest(method, fmt.Sprintf("%s%s", c.cfg.URL, url), body)
-
-	if err != nil {
-		return nil, err
-	}
+func (c Client) Request(method, url string, body io.Reader, headers http.Header) (*resty.Response, error) {
+	req := c.client.R()
 
 	for key, value := range headers {
-
 		if len(value) == 1 {
-			req.Header.Set(key, value[0])
+			req.SetHeader(key, value[0])
 			continue
 		}
 
@@ -40,15 +37,15 @@ func (c Client) Request(method, url string, body io.Reader, headers http.Header)
 		}
 	}
 
-	return c.doRetry(req)
+	return c.doRetry(req, method, url)
 }
 
-func (c Client) doRetry(req *http.Request) (res *http.Response, err error) {
+func (c Client) doRetry(req *resty.Request, method, url string) (res *resty.Response, err error) {
 	delay := c.cfg.Interval.MinMilliseconds
 
 	for {
 		nextDelay := delay * c.cfg.Factor
-		res, err = c.client.Do(req)
+		res, err = req.Execute(method, fmt.Sprintf("%s%s", c.cfg.URL, url))
 
 		if err == nil || nextDelay > c.cfg.Interval.MaxMilliseconds {
 			break

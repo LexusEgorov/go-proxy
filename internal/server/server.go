@@ -6,12 +6,14 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/LexusEgorov/go-proxy/internal/config"
+	"github.com/go-resty/resty/v2"
 	"github.com/labstack/echo/v4"
+
+	"github.com/LexusEgorov/go-proxy/internal/config"
 )
 
 type Client interface {
-	Request(method, url string, body io.Reader, headers http.Header) (*http.Response, error)
+	Request(method, url string, body io.Reader, headers http.Header) (*resty.Response, error)
 }
 
 type Server struct {
@@ -56,8 +58,9 @@ func newProxyHandler(client Client) echo.HandlerFunc {
 			return err
 		}
 
-		for key, value := range response.Header {
+		c.Response().WriteHeader(response.StatusCode())
 
+		for key, value := range response.Header() {
 			if len(value) == 1 {
 				c.Response().Header().Set(key, value[0])
 				continue
@@ -68,12 +71,7 @@ func newProxyHandler(client Client) echo.HandlerFunc {
 			}
 		}
 
-		bytedBody, err := io.ReadAll(response.Body)
-
-		if err != nil {
-			return fmt.Errorf("read body err: %v", err)
-		}
-
-		return c.Blob(response.StatusCode, response.Header.Get(echo.HeaderContentType), bytedBody)
+		_, err = c.Response().Write(response.Body())
+		return err
 	}
 }

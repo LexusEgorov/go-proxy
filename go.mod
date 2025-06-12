@@ -18,6 +18,7 @@ require (
 
 require (
 	github.com/BurntSushi/toml v1.2.1 // indirect
+	github.com/go-resty/resty/v2 v2.16.5
 	github.com/joho/godotenv v1.5.1 // indirect
 	github.com/labstack/echo/v4 v4.13.4
 	gopkg.in/yaml.v3 v3.0.1 // indirect
