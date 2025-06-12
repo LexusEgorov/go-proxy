@@ -1,0 +1,8 @@
+server:
+  port: 8081
+client:
+  interval:
+    minMs: 100
+    maxMs: 10000
+  url: "https://jsonplaceholder.typicode.com"
+  factor: 10
