@@ -6,3 +6,4 @@ client:
     maxMs: 10000
   url: "https://jsonplaceholder.typicode.com"
   factor: 10
+  retryCount: 5
