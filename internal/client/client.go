@@ -1,6 +1,7 @@
 package client
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 
@@ -38,5 +39,5 @@ func (c Client) Request(method, url string, body io.Reader, headers http.Header)
 		}
 	}
 
-	return req.Execute(method, url)
+	return req.Execute(method, fmt.Sprintf("%s%s", c.cfg.URL, url))
 }
