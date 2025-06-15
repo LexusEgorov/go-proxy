@@ -25,9 +25,10 @@ type Interval struct {
 }
 
 type ClientConfig struct {
-	Interval Interval `yaml:"interval"`
-	URL      string   `yaml:"url"`
-	Factor   int      `yaml:"factor"`
+	Interval   Interval `yaml:"interval"`
+	URL        string   `yaml:"url"`
+	Factor     int      `yaml:"factor"`
+	RetryCount int      `yaml:"retryCount"`
 }
 
 type Config struct {
@@ -132,6 +133,12 @@ func readEnvConfig() (*Config, error) {
 		return nil, err
 	}
 
+	retryCount, err := strconv.Atoi(os.Getenv("RETRY_COUNT"))
+
+	if err != nil {
+		return nil, err
+	}
+
 	return &Config{
 		Server: ServerConfig{
 			Port: port,
@@ -141,8 +148,9 @@ func readEnvConfig() (*Config, error) {
 				MinMilliseconds: minInterval,
 				MaxMilliseconds: maxInterval,
 			},
-			Factor: factor,
-			URL:    os.Getenv("DESTINATION_URL"),
+			Factor:     factor,
+			RetryCount: retryCount,
+			URL:        os.Getenv("DESTINATION_URL"),
 		},
 	}, nil
 }
