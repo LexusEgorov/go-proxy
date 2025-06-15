@@ -39,5 +39,9 @@ func (c Client) Request(method, url string, body io.Reader, headers http.Header)
 		}
 	}
 
+	if body != nil {
+		req.Body = body
+	}
+
 	return req.Execute(method, fmt.Sprintf("%s%s", c.cfg.URL, url))
 }
