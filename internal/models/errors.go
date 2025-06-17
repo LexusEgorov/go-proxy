@@ -1,6 +1,8 @@
 package models
 
-import "errors"
+import (
+	"errors"
+)
 
 var (
 	ErrConfigPathNotProvided   = errors.New("config path didn't provide")
